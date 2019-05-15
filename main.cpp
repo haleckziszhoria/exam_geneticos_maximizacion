@@ -3,27 +3,32 @@
 #include <math.h>
 #include <time.h>
 #include <iomanip>
-
-#define col 9
+//1 bit de signo, 2 bits para la parte entera y 10 bits para la parte decimal
+#define col 13
 using namespace std;
 
 
 bool comprobacion_optimo(int ar[][col],int fil){
-    int sum=0;
-    int indice=6,limite;
+    int sum=0,entero(0);
+    int indice=9,limite,indice2(1);
 
-    if(ar[fil][0]==1 && ar[fil][1]==1)
-        limite = 13;
+    if(ar[fil][1]==1 && ar[fil][2]==0)
+        limite = 48;
     else
-        limite = 99;
+        limite = 999;
+    for(int i=1;i<3;i++){
+        if(ar[fil][i]==1)
+            entero=entero+pow(2,indice2);
 
-    for(int i=2;i<col;i++){
+        indice2--;
+    }
+    for(int i=3;i<col;i++){
         if(ar[fil][i]==1)
             sum=sum+pow(2,indice);
 
         indice--;
     }
-    if(sum<=limite)
+    if(sum<=limite&&entero<=2)
         return true;
     else
         return false;
@@ -42,21 +47,26 @@ void imprimir_poblacion_valor(int ar[][col],int fil, float ar2[]){
 
 float binario_decimal(int ar[][col],int fil){
     float entero=0,decimal=0;
-    float indice1=1,indice2=6;
+    float indice1=1,indice2=9;
+    float signo;
+    if(ar[fil][0]==1)
+        signo=1;
+    else
+        signo=-1;
 
-    for(int i=0;i<2;i++){
+    for(int i=1;i<3;i++){
         if(ar[fil][i]==1)
             entero=entero+pow(2,indice1);
 
         indice1--;
     }
-    for(int i=2;i<col;i++){
+    for(int i=3;i<col;i++){
         if(ar[fil][i]==1)
             decimal=decimal+pow(2,indice2);
 
         indice2--;
     }
-    return (entero + decimal/100);
+    return (entero + decimal/1000)*signo;
 }
 
 void valores_decimales(int ar[][col],int fil,float ar2[]){
@@ -87,10 +97,13 @@ void valores_decimales(int ar[][col],int fil,float ar2[]){
 
 void seleccion_PC(float ar2[],float pc[][2],int fil){
     cout<<"Probabilidad de Cruce"<<endl;
+    float signo=-1;
     for(int i=0;i<fil;i++){
         pc[i][0] = i;
-        pc[i][1] = 1.00-(1.00*ar2[i]/3.14);
-        pc[i][1] = roundf(pc[i][1] * 100) / 100;
+        pc[i][1] = (100*ar2[i]/4.096);
+        if(pc[i][1]<0)
+            pc[i][1] = pc[i][1]*signo;
+        pc[i][1] = pc[i][1]/ 100;
         cout<<"Individuo: "<<i<<" PC: "<<pc[i][1]<<" %"<<endl;
     }
 
@@ -118,9 +131,9 @@ void cruzar_cromosomas(int ar[][col],float ar2[],float pc[][2],int fil){
     int indice1,indice2;
     int temp2;
 
-    cout<<"Cruce de Individuos (6 con mejores probabilidades)"<<endl;
-    for(int i=0;i<6;i+=2){
-        pivot = 0+rand()%9;
+    cout<<"Cruce de Individuos (10 con mejores probabilidades)"<<endl;
+    for(int i=0;i<9;i+=2){
+        pivot = 0+rand()%13;
 
         cout<<"========== Cruce entre Individuos:"<<int(pc[i][0])<<" y "<<int(pc[i+1][0])<<"========="<<endl;
         cout<<"Prob. Cruce: "<<pc[i][1]<<" - "<<pc[i+1][1];
@@ -145,7 +158,7 @@ void PM_mutacion(int ar[][col],float ar2[],float pm[][2],float pc[][2],int fil){
         pm[i][0] = pc[i][0];
         pm[i][1] = float(0+rand()%100)/100;
         pm[i][1] = roundf(pm[i][1] * 100) / 100;
-        if(i<3)
+        if(i<4)
             pm[i][1]=0.30;
 
         cout<<"Individuo: "<<pm[i][0]<<" PM: "<<pm[i][1]<<" %"<<endl;
@@ -154,7 +167,7 @@ void PM_mutacion(int ar[][col],float ar2[],float pm[][2],float pc[][2],int fil){
     int cont(0);
     for(int i=0;i<fil;i++){
         if(pm[i][1]>=0.50){
-            rmpivot = 0+rand()%9;
+            rmpivot = 0+rand()%13;
             if(ar[int(pm[i][0])][rmpivot]==1)
                ar[int(pm[i][0])][rmpivot] = 0;
             else
@@ -180,7 +193,7 @@ int main(){
     //Declarando Probabilidad de Cruce y Probabilidad de Mutación
     float PC[filas][2],PM[filas][2];
     float decimal[filas];
-    float mejor_indiv[11]={};
+    float mejor_indiv[15]={};
     //GENERANDO LA POBLACION
     for(int i=0; i<temp;i++){
         for(int j=0; j<col;j++){
@@ -203,20 +216,20 @@ int main(){
         PM_mutacion(matriz,decimal,PM,PC,filas);
         imprimir_poblacion_valor(matriz,10,decimal);
 
-        if(mejor_indiv[10]<PC[0][1]){
-            mejor_indiv[9] = PC[0][0];
-            for(int k=0;k<9;k++)
-                mejor_indiv[k] = float(matriz[int(mejor_indiv[9])][k]);
-            mejor_indiv[10] = PC[0][1];
+        if(mejor_indiv[14]<PC[0][1]){
+            mejor_indiv[13] = PC[0][0];
+            for(int k=0;k<13;k++)
+                mejor_indiv[k] = float(matriz[int(mejor_indiv[13])][k]);
+            mejor_indiv[14] = PC[0][1];
         }
         else
             contador++;
     }
 
     cout<<"%%%%%%%%%%%%%%%%%%%%%%%%%% MEJOR INDIVIDUO %%%%%%%%%%%%%%%%%%%%%%%%%%"<<endl;
-    cout<<"INDIVIDUO Nro: "<<mejor_indiv[9]<<endl;
+    cout<<"INDIVIDUO Nro: "<<mejor_indiv[13]<<endl;
     cout<<"valor decimal: "<<endl;
-    for(int i=0;i<9;i++){
+    for(int i=0;i<13;i++){
         cout<<mejor_indiv[i]<<" ";
     }
 
